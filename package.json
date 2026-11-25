@@ -21,12 +21,10 @@
     "express-validator": "^6.15.0",
     "helmet": "^4.6.0",
     "jsonwebtoken": "8.5.1",
-    "mongoose": "5.13.23",
+    "mongoose": "^9.13.1",
     "multer": "1.4.5-lts.1",
+    "nodemon": "^3.1.14",
     "rate-limiter-flexible": "^2.4.1"
   },
-  "type": "module",
-  "devDependencies": {
-    "nodemon": "1.19.4"
-  }
+  "type": "module"
 }

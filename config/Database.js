@@ -18,9 +18,8 @@ async function connectDB() {
   connecting = mongoose
     .connect(uri, {
       serverSelectionTimeoutMS: 10000, // fail fast instead of hanging
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      useCreateIndex: true,
+      socketTimeoutMS: 45000,
+      maxPoolSize: 10,
     })
     .then(() => {
       console.log("MongoDB connected");
@@ -34,5 +33,19 @@ async function connectDB() {
 
   return connecting;
 }
+
+// Kapag naputol ang connection (hal. matagal na idle), i-reset para makapag-reconnect
+mongoose.connection.on("disconnected", () => {
+  console.warn("MongoDB disconnected. Mongoose will try to reconnect...");
+  connecting = null;
+});
+
+mongoose.connection.on("reconnected", () => {
+  console.log("MongoDB reconnected");
+});
+
+mongoose.connection.on("error", (err) => {
+  console.error("MongoDB error:", err.message);
+});
 
 export default connectDB;

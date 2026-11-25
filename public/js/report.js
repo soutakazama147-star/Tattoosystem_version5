@@ -400,6 +400,7 @@ document.addEventListener('DOMContentLoaded', function () {
         setText('totalCompleted', s.completed || 0);
     }
 
+    // BINAGO: tinanggal ang Contact column (6 columns na lang)
     function renderRecords() {
         if (!recordsTable) {
             return;
@@ -421,7 +422,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             return '<tr>' +
                 '<td>' + escapeHtml(a.clientName) + '</td>' +
-                '<td>' + escapeHtml(a.phone) + '</td>' +
                 '<td>' + formatDate(a.date) + '</td>' +
                 '<td>' + escapeHtml(a.time) + '</td>' +
                 '<td>' + escapeHtml(a.tattooType) + '</td>' +
@@ -666,16 +666,16 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // BINAGO: tinanggal ang Contact sa CSV export
     var exportBtn = document.getElementById('exportBtn');
 
     if (exportBtn) {
         exportBtn.addEventListener('click', function () {
-            var header = ['Client', 'Contact', 'Date', 'Time', 'Tattoo Type', 'Payment', 'Status'];
+            var header = ['Client', 'Date', 'Time', 'Tattoo Type', 'Payment', 'Status'];
 
             var lines = [header].concat(filtered().map(function (a) {
                 return [
                     a.clientName || '',
-                    a.phone || '',
                     formatDate(a.date),
                     a.time || '',
                     a.tattooType || '',

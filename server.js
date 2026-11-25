@@ -862,22 +862,37 @@ app.use("/", pageRoutes);
 
 // ======================================================
 // ADMIN ACCOUNT  (SECURITY FIX)
-// Wala nang hardcoded na "admin123".
+// Wala nang hardcoded na password sa code.
+//  - Ang username ay galing sa ADMIN_USERNAME (default: "Totats").
 //  - Kung may ADMIN_PASSWORD sa .env, iyon ang gagamitin (at ia-update
 //    ang password ng admin tuwing mag-start kung iba ito).
 //  - Kung wala at bagong account pa lang, gagawa ng random na password
 //    at ipi-print ONE TIME sa console. Isulat agad.
+//  - Kapag may lumang "admin" account, ire-rename ito sa ADMIN_USERNAME.
 // Ang existing na admin password ay hindi binabago kung walang
 // ADMIN_PASSWORD sa .env.
+//
+// Sa .env, lagyan ng quotes ang password dahil may "#":
+//   ADMIN_USERNAME=Totats
+//   ADMIN_PASSWORD="TotatsSkinArtTattoo12@#;"
 // ======================================================
+
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "Totats";
 
 const initializeAdmin = async () => {
     try {
+        const envPassword = process.env.ADMIN_PASSWORD;
+
+        // Hanapin muna ang "Totats"; kung wala, i-rename ang lumang "admin" account
         let admin = await User.findOne({
-            username: "admin"
+            username: ADMIN_USERNAME
         });
 
-        const envPassword = process.env.ADMIN_PASSWORD;
+        if (!admin) {
+            admin = await User.findOne({
+                username: "admin"
+            });
+        }
 
         if (!admin) {
             const initialPassword = envPassword ||
@@ -889,7 +904,7 @@ const initializeAdmin = async () => {
             );
 
             admin = new User({
-                username: "admin",
+                username: ADMIN_USERNAME,
                 password: hashedPassword,
                 role: "admin",
                 isActive: true
@@ -899,7 +914,7 @@ const initializeAdmin = async () => {
 
             console.log("=================================");
             console.log("✅ ADMIN CREATED");
-            console.log("Username: admin");
+            console.log("Username:", ADMIN_USERNAME);
 
             if (envPassword) {
                 console.log("Password: (galing sa ADMIN_PASSWORD sa .env)");
@@ -912,11 +927,9 @@ const initializeAdmin = async () => {
             console.log("=================================");
 
         } else {
+            admin.username = ADMIN_USERNAME;
             admin.role = "admin";
-
-            if (admin.isActive === undefined) {
-                admin.isActive = true;
-            }
+            admin.isActive = true;
 
             if (envPassword) {
                 const same = await bcrypt.compare(envPassword, admin.password);
@@ -930,7 +943,7 @@ const initializeAdmin = async () => {
             await admin.save();
 
             console.log("=================================");
-            console.log("✅ ADMIN ACCOUNT EXISTS");
+            console.log("✅ ADMIN ACCOUNT READY");
             console.log("Username:", admin.username);
             console.log("Role:", admin.role);
             console.log("=================================");

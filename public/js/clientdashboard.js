@@ -511,6 +511,110 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // ==================================================
+    // GCASH - ipakita ang QR / number ng tattoo owner
+    // ==================================================
+
+    // ====== PALITAN ITO NG TOTOONG GCASH MO ======
+    var GCASH_NUMBER = '09XXXXXXXXX';
+    var GCASH_NAME = 'Totats Skin Art Tattoo';
+    var GCASH_QR = '/images/gcash-qr.jpg';   // ilagay ang QR sa public/images/
+    // =============================================
+
+    var gcashBox = document.getElementById('gcashBox');
+    var gcashQr = document.getElementById('gcashQr');
+    var gcashCopy = document.getElementById('gcashCopy');
+
+    (function injectGcashStyles() {
+        if (document.getElementById('gcashStyles')) {
+            return;
+        }
+
+        var style = document.createElement('style');
+        style.id = 'gcashStyles';
+
+        style.textContent =
+            '.gcash-box{display:flex;flex-direction:column;align-items:center;gap:10px;' +
+            'padding:14px;margin-bottom:12px;border:1px solid #0a6cff;border-radius:10px;' +
+            'background:rgba(10,108,255,.08);text-align:center}' +
+            '.gcash-box[hidden]{display:none}' +
+            '.gcash-qr{width:180px;max-width:100%;border-radius:8px;background:#fff;padding:6px}' +
+            '.gcash-info{width:100%;font-size:13px;text-align:left}' +
+            '.gcash-row{display:flex;justify-content:space-between;align-items:center;' +
+            'gap:8px;padding:3px 0}' +
+            '.gcash-row span{opacity:.7}' +
+            '.gcash-copy{padding:3px 10px;font-size:12px;border:none;border-radius:4px;' +
+            'background:#0a6cff;color:#fff;cursor:pointer}';
+
+        document.head.appendChild(style);
+    })();
+
+    function setGcashText(id, text) {
+        var el = document.getElementById(id);
+
+        if (el) {
+            el.textContent = text;
+        }
+    }
+
+    function refreshGcash() {
+        if (!gcashBox) {
+            return;
+        }
+
+        var paid = Number(paymentAmountInput ? paymentAmountInput.value : 0) || 0;
+        var isGcash = paymentMethodSelect && paymentMethodSelect.value === 'GCash';
+        var show = Boolean(isGcash && paid > 0);
+
+        gcashBox.hidden = !show;
+
+        if (!show) {
+            return;
+        }
+
+        if (gcashQr && gcashQr.getAttribute('src') !== GCASH_QR) {
+            gcashQr.style.display = '';
+            gcashQr.src = GCASH_QR;
+        }
+
+        setGcashText('gcashName', GCASH_NAME);
+        setGcashText('gcashNumber', GCASH_NUMBER);
+        setGcashText('gcashAmount', formatPeso(paid));
+    }
+
+    // Kung walang QR image, number na lang ang makikita
+    if (gcashQr) {
+        gcashQr.addEventListener('error', function () {
+            gcashQr.style.display = 'none';
+        });
+    }
+
+    if (gcashCopy) {
+        gcashCopy.addEventListener('click', function () {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(GCASH_NUMBER).then(function () {
+                    gcashCopy.textContent = 'Copied!';
+                    setTimeout(function () { gcashCopy.textContent = 'Copy'; }, 1500);
+                });
+            }
+        });
+    }
+
+    if (paymentAmountInput) {
+        paymentAmountInput.addEventListener('input', refreshGcash);
+    }
+
+    if (paymentMethodSelect) {
+        paymentMethodSelect.addEventListener('change', refreshGcash);
+    }
+
+    // form.reset() ay hindi nagpapadala ng change event
+    if (form) {
+        form.addEventListener('reset', function () {
+            setTimeout(refreshGcash, 0);
+        });
+    }
+
     // Minimalist: naka-fixed ang size (Small) at ang presyo ay 700
     var FIXED_SIZE_BY_TYPE = {
         Minimalist: 'Small'
@@ -651,6 +755,74 @@ document.addEventListener('DOMContentLoaded', function () {
             .addEventListener('click', clearChosenDesign);
     }
 
+    function normalizeName(value) {
+        return String(value || '')
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, ' ')
+            .trim();
+    }
+
+    // Piliin sa "Tattoo Style" ang option na tugma sa pangalan ng photo.
+    // Kung wala, gagawa ng bagong option gamit mismo ang pangalan.
+    function selectTattooTypeByName(name) {
+        if (!tattooTypeSelect || !name) {
+            return;
+        }
+
+        var target = normalizeName(name);
+
+        if (!target) {
+            return;
+        }
+
+        var match = -1;
+        var i, option, optValue, optText;
+
+        // 1. Eksaktong tugma (value o text)
+        for (i = 0; i < tattooTypeSelect.options.length; i++) {
+            option = tattooTypeSelect.options[i];
+
+            if (!option.value) {
+                continue;
+            }
+
+            optValue = normalizeName(option.value);
+            optText = normalizeName(option.textContent);
+
+            if (optValue === target || optText === target) {
+                match = i;
+                break;
+            }
+        }
+
+        // 2. Partial na tugma, hal. "Minimalist Rose" -> "Minimalist"
+        if (match === -1) {
+            for (i = 0; i < tattooTypeSelect.options.length; i++) {
+                option = tattooTypeSelect.options[i];
+                optValue = normalizeName(option.value);
+
+                if (optValue &&
+                    (target.indexOf(optValue) !== -1 || optValue.indexOf(target) !== -1)) {
+                    match = i;
+                    break;
+                }
+            }
+        }
+
+        // 3. Walang tugma: idagdag ang pangalan ng photo bilang bagong option
+        if (match === -1) {
+            option = document.createElement('option');
+            option.value = name;
+            option.textContent = name;
+            option.setAttribute('data-from-photo', 'true');
+            tattooTypeSelect.appendChild(option);
+            match = tattooTypeSelect.options.length - 1;
+        }
+
+        tattooTypeSelect.selectedIndex = match;
+        applyTypeFixedSize();
+    }
+
     function showChosenDesign(title, image) {
         buildChosenUi();
 
@@ -667,16 +839,8 @@ document.addEventListener('DOMContentLoaded', function () {
             fileInput.value = '';
         }
 
-        // Itugma ang service sa design kung may ganoong option
-        if (tattooTypeSelect && title) {
-            for (var i = 0; i < tattooTypeSelect.options.length; i++) {
-                if (tattooTypeSelect.options[i].value.toLowerCase() === title.toLowerCase()) {
-                    tattooTypeSelect.selectedIndex = i;
-                    applyTypeFixedSize();
-                    break;
-                }
-            }
-        }
+        // Tattoo style = pangalan ng napiling photo
+        selectTattooTypeByName(title);
     }
 
     function clearChosenDesign() {
@@ -690,6 +854,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (chosenImage) {
             chosenImage.src = '';
+        }
+
+        // Alisin ang option na idinagdag galing sa pangalan ng photo
+        var extra = tattooTypeSelect
+            ? tattooTypeSelect.querySelectorAll('option[data-from-photo]')
+            : [];
+
+        if (extra.length) {
+            for (var k = 0; k < extra.length; k++) {
+                extra[k].remove();
+            }
+
+            applyTypeFixedSize();
         }
     }
 

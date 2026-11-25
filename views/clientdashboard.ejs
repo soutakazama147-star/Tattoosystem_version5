@@ -285,6 +285,25 @@
                             </div>
                         </div>
 
+                        <!-- ===== GCASH PAYMENT DETAILS (shows only when GCash + amount entered) ===== -->
+                        <div class="gcash-box" id="gcashBox" hidden>
+                            <strong>Send your payment via GCash</strong>
+
+                            <img id="gcashQr" class="gcash-qr" src="" alt="GCash QR Code">
+
+                            <div class="gcash-info">
+                                <div class="gcash-row"><span>Account Name</span><b id="gcashName">-</b></div>
+                                <div class="gcash-row">
+                                    <span>GCash Number</span>
+                                    <b id="gcashNumber">-</b>
+                                    <button type="button" id="gcashCopy" class="gcash-copy">Copy</button>
+                                </div>
+                                <div class="gcash-row"><span>Amount to Send</span><b id="gcashAmount">-</b></div>
+                            </div>
+
+                            <small>Scan the QR code or send to the number above, then click Book Appointment.</small>
+                        </div>
+
                         <div class="amount-box">
                             <span class="amount-label">Remaining Balance</span>
                             <span class="amount-value" id="balanceDisplay">&#8369;0.00</span>
