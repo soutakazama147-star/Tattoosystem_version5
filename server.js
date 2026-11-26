@@ -28,7 +28,7 @@ import requireRole from "./middleware/requireRole.js";
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 7060;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -859,23 +859,6 @@ app.use("/api/appointments", bookingRouter);
 app.use("/api/appointments", appointmentRoutes);
 app.use("/api/photos", photoRoutes);
 app.use("/", pageRoutes);
-
-// ======================================================
-// ADMIN ACCOUNT  (SECURITY FIX)
-// Wala nang hardcoded na password sa code.
-//  - Ang username ay galing sa ADMIN_USERNAME (default: "Totats").
-//  - Kung may ADMIN_PASSWORD sa .env, iyon ang gagamitin (at ia-update
-//    ang password ng admin tuwing mag-start kung iba ito).
-//  - Kung wala at bagong account pa lang, gagawa ng random na password
-//    at ipi-print ONE TIME sa console. Isulat agad.
-//  - Kapag may lumang "admin" account, ire-rename ito sa ADMIN_USERNAME.
-// Ang existing na admin password ay hindi binabago kung walang
-// ADMIN_PASSWORD sa .env.
-//
-// Sa .env, lagyan ng quotes ang password dahil may "#":
-//   ADMIN_USERNAME=Totats
-//   ADMIN_PASSWORD="TotatsSkinArtTattoo12@#;"
-// ======================================================
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "Totats";
 
