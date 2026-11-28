@@ -24,6 +24,13 @@
 </head>
 <body>
 
+  <%
+    /* galing sa server.js ang loggedIn / loginUrl.
+       Kung wala (ibang route ang nag-render), default: hindi naka-login. */
+    var isLoggedIn = Boolean(locals.loggedIn);
+    var accountUrl = locals.loginUrl || "/login";
+  %>
+
   <header class="topbar">
     <a class="logo" href="/">
       <img src="/images/TotatsSkinArtTattoo.jpg" alt="Totats Skin Art Tattoo logo">
@@ -36,7 +43,12 @@
       <a class="link-item" href="#booking">Booking</a>
       <a class="link-item" href="#location">Location</a>
       <a class="link-item" href="/aboutus" target="_blank" rel="noopener">About us</a>
-      <a class="btn btn-primary" href="/login">Log in</a>
+
+      <% if (isLoggedIn) { %>
+        <a class="btn btn-primary" href="<%= accountUrl %>">My dashboard</a>
+      <% } else { %>
+        <a class="btn btn-primary" href="/login">Log in</a>
+      <% } %>
     </nav>
   </header>
 
@@ -49,7 +61,11 @@
         <h1>Affordable Quality <span>Tattoo</span></h1>
         <p class="lede">Clean work, fair prices and a free aftercare ointment with every tattoo. Book online in a few minutes.</p>
         <div class="hero-actions">
-          <a class="btn btn-primary btn-lg" href="/register">Get started</a>
+          <% if (isLoggedIn) { %>
+            <a class="btn btn-primary btn-lg" href="<%= accountUrl %>">Go to dashboard</a>
+          <% } else { %>
+            <a class="btn btn-primary btn-lg" href="/register">Get started</a>
+          <% } %>
           <a class="btn btn-ghost btn-lg" href="#pricing">See prices</a>
         </div>
       </div>
@@ -204,8 +220,13 @@
       </div>
       <div>
         <p class="foot-head">Account</p>
-        <a href="/login">Log in</a>
-        <a href="/register">Register</a>
+        <% if (isLoggedIn) { %>
+          <a href="<%= accountUrl %>">My dashboard</a>
+          <a href="/logout">Log out</a>
+        <% } else { %>
+          <a href="/login">Log in</a>
+          <a href="/register">Register</a>
+        <% } %>
         <a href="/aboutpublic" target="_blank" rel="noopener">About us</a>
       </div>
       <div>

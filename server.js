@@ -119,7 +119,9 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use(express.static(path.join(__dirname, "public")));
+// FIX: "index: false" para hindi maunahan ng public/index.html ang "/"
+// at ang landing page (views/landingpage.ejs) ang unang lalabas.
+app.use(express.static(path.join(__dirname, "public"), { index: false }));
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
@@ -851,6 +853,41 @@ bookingRouter.post(
     }
 );
 
+// ======================================================
+// LANDING PAGE + LOGIN + REGISTER  (FIX)
+// Nasa itaas ito ng app.use("/", pageRoutes) para hindi maunahan.
+// - "/"  : landing page muna ang unang lalabas pagbukas ng website
+// - Login button: kapag naka-login na, diretso sa dashboard ayon sa role
+//   (admin/owner/tattooartist -> /dashboard, client -> /clientdashboard).
+//   Kapag hindi pa, sa /login muna.
+// ======================================================
+
+app.get("/", (req, res) => {
+    const role = req.cookies.role;
+    const loggedIn = Boolean(req.cookies.userId && role);
+
+    res.render("landingpage", {
+        loggedIn: loggedIn,
+        username: req.cookies.username || "",
+        loginUrl: loggedIn ? homeFor(role) : "/login"
+    });
+});
+
+app.get("/login", (req, res) => {
+    const userId = req.cookies.userId;
+    const role = req.cookies.role;
+
+    if (userId && role) {
+        return res.redirect(homeFor(role));
+    }
+
+    res.render("login");
+});
+
+app.get("/register", (req, res) => {
+    res.render("register");
+});
+
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/inventory", inventoryRoutes);
 app.use("/api/reports", reportRoutes);
@@ -939,29 +976,6 @@ const initializeAdmin = async () => {
         );
     }
 };
-
-app.get("/", (req, res) => {
-    res.render("landingpage");
-});
-
-app.get("/login", (req, res) => {
-    const userId = req.cookies.userId;
-    const role = req.cookies.role;
-
-    if (userId) {
-        return res.redirect(homeFor(role));
-    }
-
-    res.render("login");
-});
-
-app.get("/register", (req, res) => {
-    res.render("register");
-});
-
-// app.get("/landingpage", (req, res) => {
-//     res.render("landingpage");
-// });
 
 const MONTH_LABELS = [
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",

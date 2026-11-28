@@ -394,7 +394,7 @@ document.addEventListener('DOMContentLoaded', function () {
         phoneInput.required = true;
 
         if (!phoneInput.placeholder) {
-            phoneInput.placeholder = '09XXXXXXXXX';
+            phoneInput.placeholder = '0965-308-776-6';
         }
 
         phoneInput.addEventListener('input', function () {
@@ -505,19 +505,13 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    if (paymentMethodSelect) {
-        paymentMethodSelect.addEventListener('change', function () {
-            refreshBalance();
-        });
-    }
-
     // ==================================================
     // GCASH - ipakita ang QR / number ng tattoo owner
     // ==================================================
 
     // ====== PALITAN ITO NG TOTOONG GCASH MO ======
-    var GCASH_NUMBER = '09XXXXXXXXX';
-    var GCASH_NAME = 'Totats Skin Art Tattoo';
+    var GCASH_NUMBER = '0965-308-776-6';
+    var GCASH_NAME = 'ISM M. B';
     var GCASH_QR = '/images/gcash-qr.jpg';   // ilagay ang QR sa public/images/
     // =============================================
 
@@ -557,18 +551,18 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // Lalabas agad ang GCash block pagpinindot ang GCash, kahit wala pang amount
     function refreshGcash() {
         if (!gcashBox) {
             return;
         }
 
-        var paid = Number(paymentAmountInput ? paymentAmountInput.value : 0) || 0;
-        var isGcash = paymentMethodSelect && paymentMethodSelect.value === 'GCash';
-        var show = Boolean(isGcash && paid > 0);
+        var isGcash = Boolean(paymentMethodSelect && paymentMethodSelect.value === 'GCash');
+        var due = Number(amountInput ? amountInput.value : 0) || 0;
 
-        gcashBox.hidden = !show;
+        gcashBox.hidden = !isGcash;
 
-        if (!show) {
+        if (!isGcash) {
             return;
         }
 
@@ -579,7 +573,37 @@ document.addEventListener('DOMContentLoaded', function () {
 
         setGcashText('gcashName', GCASH_NAME);
         setGcashText('gcashNumber', GCASH_NUMBER);
-        setGcashText('gcashAmount', formatPeso(paid));
+        // Wala nang input, kaya ang kabuuang halaga ang ipapakita
+        setGcashText('gcashAmount', due > 0 ? formatPeso(due) : '-');
+    }
+
+    // Cash lang ang may input ng amount. Sa GCash, itinatago ang input.
+    function refreshPaymentAccess() {
+        if (!paymentAmountInput) {
+            return;
+        }
+
+        var method = paymentMethodSelect ? paymentMethodSelect.value : '';
+        var isCash = method === 'Cash';
+        var isGcash = method === 'GCash';
+
+        // Ang buong field group (label + input) ang itatago
+        var group = paymentAmountInput.closest('.form-group') ||
+            paymentAmountInput.parentNode;
+
+        if (group) {
+            group.style.display = isGcash ? 'none' : '';
+        }
+
+        paymentAmountInput.disabled = !isCash;
+
+        if (!isCash) {
+            paymentAmountInput.value = '';
+            paymentAmountInput.placeholder = 'Choose Cash first';
+            refreshBalance();
+        } else {
+            paymentAmountInput.placeholder = 'Enter amount';
+        }
     }
 
     // Kung walang QR image, number na lang ang makikita
@@ -605,13 +629,20 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     if (paymentMethodSelect) {
-        paymentMethodSelect.addEventListener('change', refreshGcash);
+        paymentMethodSelect.addEventListener('change', function () {
+            refreshPaymentAccess();
+            refreshBalance();
+            refreshGcash();
+        });
     }
 
     // form.reset() ay hindi nagpapadala ng change event
     if (form) {
         form.addEventListener('reset', function () {
-            setTimeout(refreshGcash, 0);
+            setTimeout(function () {
+                refreshPaymentAccess();
+                refreshGcash();
+            }, 0);
         });
     }
 
@@ -680,6 +711,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     applyTypeFixedSize();
     refreshAmount();
+    refreshPaymentAccess();
+    refreshGcash();
 
     // ==================================================
     // REFERENCE PHOTO - napiling design galing sa /photos
@@ -1193,7 +1226,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             var payload = new FormData(form);
 
-            // Hindi kasama sa FormData ang naka-disable na select
+            // Hindi kasama sa FormData ang naka-disable na select / input
             if (sizeSelect && sizeSelect.disabled) {
                 payload.set('tattooSize', sizeSelect.value);
             }
@@ -1229,7 +1262,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     clearChosenDesign();
                     resetTimeToOpening();
                     applyTypeFixedSize();
+                    refreshPaymentAccess();
                     refreshBalance();
+                    refreshGcash();
 
                     if (typeof window.closeAppointmentModal === 'function') {
                         window.closeAppointmentModal();
